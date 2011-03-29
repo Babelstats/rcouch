@@ -1,0 +1,25 @@
+Alternate couchdb version
+-------------------------
+
+rebared version of couchdb with plugings.
+
+
+Requirements:
+------------
+
+- Erlang R14x
+- Curl
+- icu4c
+
+
+Install
+-------
+
+ $ ./configure
+ $ make
+ $ make install
+
+To just run dev versoin:
+
+ $ make dev
+
