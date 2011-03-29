@@ -54,7 +54,7 @@ install: dist
 	@touch $(prefix)/var/log/rcouch.log
 	@chown $(user) $(prefix)/var/log/rcouch.log
 
-dev: compile
+dev: all
 	@rm -rf rel/tmpdata
 	@rm -rf rel/dev
 	@echo "==> Building development node (ports 15984/15986)"
