@@ -12,10 +12,6 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-function quit {
-  exit
-}
-
 PREFIX="/opt/rcouch"
 COUCHDB_USER=`whoami`
 ABSPATH="$(cd "${0%/*}" 2>/dev/null; echo "$PWD"/"${0##*/}")"
@@ -47,7 +43,7 @@ do
     ;;
     *)
       echo "usage: $0 [-p {prefix} -t {template} -d {data_dir} -v {view_dir} -u {user}]"
-      quit
+      exit
     ;;
   esac
 done
