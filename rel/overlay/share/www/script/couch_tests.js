@@ -101,4 +101,10 @@ loadTest("view_sandboxing.js");
 loadTest("view_update_seq.js");
 loadTest("view_xml.js");
 // keep sorted
+loadTest("spatial.js");
+loadTest("list_spatial.js");
+loadTest("etags_spatial.js");
+loadTest("multiple_spatial_rows.js");
+loadTest("spatial_compaction.js");
+loadTest("spatial_design_docs.js");
 
