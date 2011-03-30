@@ -38,3 +38,4 @@ deps
 rel/refuge.config
 rel/refuge
 rel/couchdb.config
+rel/rcouch.config
