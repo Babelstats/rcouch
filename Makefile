@@ -25,11 +25,12 @@ deps:
 clean:
 	@./rebar clean
 
-
-check: dev
-	@./rebar eunit
-	@ERL_FLAGS="-pa `pwd`/deps/couch_core/ebin `pwd`/deps/couch_core/test/etap" \
-		prove deps/couch_core/test/etap/*.t
+%.beam: %.erl
+	@erlc -o deps/couch/test/etap/ $<
+ 
+check: deps/couch/test/etap/etap.beam deps/couch/test/etap/test_util.beam deps/couch/test/etap/test_web.beam
+	@ERL_FLAGS="-pa `pwd`/deps/couch/ebin `pwd`/deps/couch/test/etap" \
+		prove -v deps/couch/test/etap/180*.t
 
 dist: compile
 	@rm -rf rel/rcouch
