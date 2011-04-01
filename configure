@@ -57,7 +57,7 @@ cat > rel/rcouch.config << EOF
 {data_dir, "$DATA"}.
 {view_dir, "$VIEW"}.
 {user, "$COUCHDB_USER"}.
-{node_name, "-name rcouch"}.
+{node_name, "-sname rcouch"}.
 {couchdb_port, 5984}.
 {ssl_port, 6986}.
 EOF
