@@ -8,9 +8,7 @@ Requirements:
 ------------
 
 - Erlang R14x
-- Curl
-- icu4c
-
+- Tested under Linux or Macosx
 
 Install
 -------
