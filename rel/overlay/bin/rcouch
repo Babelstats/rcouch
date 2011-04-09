@@ -24,5 +24,181 @@ export BINDIR=$ROOTDIR/erts-$ERTS_VSN/bin
 export EMU=beam
 export PROGNAME=`echo $0 | sed 's/.*\///'`
 
-exec $BINDIR/erlexec -boot $ROOTDIR/releases/$APP_VSN/rcouch \
-    -args_file $ROOTDIR/etc/vm.args
+RECURSED=false
+BACKGROUND=false
+PIDFILE=$ROOTDIR/var/run/rcouch.pid
+HEART_BEAT_TIMEOUT=11
+HEART_COMMAND="$ROOTDIR/bin/rcouch -k"
+KILL=false
+RESPAWN_TIMEOUT=0
+SHUTDOWN=false
+STDERR_FILE=couchdb.stderr
+STDOUT_FILE=couchdb.stdout
+RCOUCH_USER={{user}}
+
+basename=`basename $0`
+
+display_help ()
+{
+    cat << EOF
+Usage: $basename [OPTION]
+
+  -b          spawn as a background process
+  -p FILE     set the background PID FILE (overrides system default)
+  -u USER     couchdb user
+  -r SECONDS  respawn background process after SECONDS (defaults to no respawn)
+  -k          kill the background process, will respawn if needed
+  -d          shutdown the background process
+  -s          display the status of the background process  
+  -o FILE     redirect background stdout to FILE (defaults to $STDOUT_FILE)
+  -e FILE     redirect background stderr to FILE (defaults to $STDERR_FILE)
+EOF
+}
+
+display_error () {
+    if test -n "$1"; then
+        echo $1 >&2
+    fi
+    echo >&2
+    echo "Try \`"$basename" -h' for more information." >&2
+    false
+}
+
+pid_touch ()
+{
+    touch $PIDFILE
+    chown $RCOUCH_USER $PIDFILE
+}
+
+_get_pid () {
+    if test -f $PIDFILE; then
+        PID=`cat $PIDFILE`
+    fi
+    echo $PID
+}
+
+check_status () {
+    PID=`_get_pid`
+    if test -n "$PID"; then
+        if kill -0 $PID 2> /dev/null; then
+            echo "Refuge CouchDB is running as process $PID, time to relax."
+            return 0
+        else
+            echo >&2 << EOF
+Refuge CouchDB is not running but a stale PID file exists: $PIDFILE"
+EOF
+        fi
+    else
+        echo "Apache CouchDB is not running." >&2
+    fi
+    return 1 
+}
+
+start_couchdb () 
+{
+    command=" $BINDIR/erlexec \
+        -boot $ROOTDIR/releases/$APP_VSN/rcouch \
+        -args_file $ROOTDIR/etc/vm.args"
+
+    if test "$BACKGROUND" = "true" -a "$RECURSED" = "false"; then
+        $0 -b -r $RESPAWN_TIMEOUT -p $PIDFILE -u $RCOUCH_USER \
+            -o $STDOUT_FILE -e $STDERR_FILE -R &
+        echo "Apache CouchDB has started, time to relax."
+    else
+        if test "$RECURSED" = "true"; then
+            pid_touch
+            while true; do
+                export HEART_COMMAND
+                export HEART_BEAT_TIMEOUT
+
+                `eval $command -pidfile $PIDFILE -heart \
+                        >> $STDOUT_FILE 2>> $STDERR_FILE` || true
+                PID=`_get_pid`
+                if test -n "$PID"; then
+                    if kill -0 $PID 2> /dev/null; then
+                        return 1 
+                    fi
+                else
+                    return 0
+                fi
+                if test "$RESPAWN_TIMEOUT" = "0"; then
+                    return 0
+                fi
+                if test "$RESPAWN_TIMEOUT" != "1"; then
+                    plural_ending="s"
+                fi
+                cat << EOF
+Refuge CouchDB crashed, restarting in $RESPAWN_TIMEOUT second$plural_ending.
+EOF
+                sleep $RESPAWN_TIMEOUT
+            done
+        else 
+            eval exec $command
+        fi
+    fi
+}
+
+stop_couchdb ()
+{
+    PID=`_get_pid`
+    if test -n "$PID"; then
+        if test "$1" = "false"; then
+            echo > $PIDFILE
+        fi
+        if kill -0 $PID 2> /dev/null; then
+            if kill -1 $PID 2> /dev/null; then
+                if test "$1" = "false"; then
+                    echo "Apache CouchDB has been shutdown."
+                else
+                    echo "Apache CouchDB has been killed."
+                fi
+                return 0 
+            else
+                echo "Apache CouchDB could not be killed." >&2
+                return 1 
+            fi
+            if test "$1" = "false"; then
+                echo "Stale PID file exists but Apache CouchDB is not running."
+            else
+                echo "Stale PID file existed but Apache CouchDB is not running."
+            fi
+        fi
+    else
+        echo "Apache CouchDB is not running."
+    fi
+}
+
+parse_script_option_list () 
+{
+    set +e
+    options=`getopt hbp:u:r:Ro:e:skd $@`
+    if test ! $? -eq 0; then
+        display_error
+    fi
+    set -e
+    eval set -- $options
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h) shift; display_help; exit;;
+            -b) shift; BACKGROUND=true;;
+            -p) shift; PIDFILE=$1; shift;;
+            -u) shift; RCOUCH_USER=$1; shift;;
+            -r) shift; RESPAWN_TIMEOUT=$1; shift;;
+            -R) shift; RECURSED=true;;
+            -o) shift; STDOUT_FILE=$1; shift;;
+            -e) shift; STDERR_FILE=$1; shift;;
+            -s) shift; check_status; exit;;
+            -k) shift; KILL=true;;
+            -d) shift; SHUTDOWN=true;;
+            --) shift; break;;
+            *) display_error "Unknown option: $1" >&2;;
+        esac
+    done
+    if test "$KILL" = "true" -o "$SHUTDOWN" = "true"; then
+        stop_couchdb $KILL
+    else
+        start_couchdb
+    fi
+}
+
+parse_script_option_list $@

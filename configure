@@ -87,6 +87,7 @@ cat > rel/dev.config << EOF
 {prefix, "$DIRPATH/rel/dev"}.
 {data_dir, "$DIRPATH/rel/tmpdata/dev"}.
 {view_dir, "$DIRPATH/rel/tmpdata/dev"}.
+{user, "$RCOUCH_USER"}.
 {node_name, "-name dev@127.0.0.1"}.
 {couchdb_port, 15984}.
 {ssl_port, 16986}.
