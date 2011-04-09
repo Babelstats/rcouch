@@ -57,7 +57,7 @@ install: dist
 
 archive: dist
 	@rm -rf $(DISTDIR)
-	@rm -f rcouch-$(version)-$(os)-$(arch).tar.gz
+	@rm -f rcouch-$(VERSION)-$(OS)-$(ARCH).tar.gz
 	@mkdir -p $(DISTDIR)$(PREFIX)
 	@cp -R rel/rcouch/* $(DISTDIR)$(PREFIX)
 	@mkdir -p $(DISTDIR)$(DATADIR)
