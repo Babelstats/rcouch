@@ -3,6 +3,7 @@
 *.Tpo
 *.beam
 erl_crash.dump
+rel/rcouch-*.tar.gz
 
 # building
 apps/*/ebin/
