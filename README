@@ -1,23 +1,55 @@
-Alternate couchdb version
--------------------------
+rcouch 0.2 - Alternate couchdb version
+--------------------------------------
 
-rebared version of couchdb with plugings.
+Refuge CouchDB is a custom distribution of Apache CouchDB using rebar.
+The purpose of this project is to provide a CouchDB base for the refuge
+project, but it can also be used to deploy an Apache CouchDB based
+product on your machine.
 
+Features:
+---------
+
+- Apache CouchDB 1.2x based (current trunk right now)
+- Geocouch integrated
+- Fast json encoding/decoding using eep0018 module.
+- Javascript engine is Spidermonkey 0.8.5
+- No dependancies. Modules are statically linked against spidermonkey
+  and icu provided during installation.
+- Fully opensource. All the sources are on refuge GIT repository under
+  Apache License 2.
+
+
+Supported platforms
+-------------------
+
+- Linux 2.6x 32/64
+- FreeBSD 8.2 i386/amd64
+- MacOS X 10.6/10.7
+
+Download binaries
+-----------------
+
+Get binaries from http://rcouch.refuge.io/dl 
+
+then do:
+
+$ tar xvzf rcouch-0.2-$PLATFORM.tar.gz -C /
+
+Install from source
+-------------------
 
 Requirements:
-------------
 
 - Erlang R14x
+- Git
 - Tested under Linux or Macosx
 
-Install
--------
+Do install:
 
  $ ./configure
  $ make
  $ make install
 
-To just run dev versoin:
+To just run dev version:
 
  $ make dev
-

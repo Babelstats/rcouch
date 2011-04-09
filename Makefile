@@ -12,7 +12,7 @@
 ## License for the specific language governing permissions and limitations under
 ## the License.
 
-ACLOCAL_AMFLAGS = -I m4
+DISTDIR=	rel/archive
 
 all: deps compile
 
@@ -46,14 +46,28 @@ distclean: clean
 
 include install.mk
 install: dist
-	@mkdir -p $(prefix)
-	@cp -R rel/rcouch/* $(prefix)
-	@mkdir -p $(data_dir)
-	@chown $(user) $(data_dir)
-	@mkdir -p $(view_dir)
-	@chown $(user) $(view_dir)
-	@touch $(prefix)/var/log/rcouch.log
-	@chown $(user) $(prefix)/var/log/rcouch.log
+	@mkdir -p $(PREFIX)
+	@cp -R rel/rcouch/* $(PREFIX)
+	@mkdir -p $(DATADIR)
+	@chown $(RCOUCH_USER) $(DATADIR)
+	@mkdir -p $(VIEWDIR)
+	@chown $(RCOUCH_USER) $(VIEWDIR)
+	@touch $(PREFIX)/var/log/rcouch.log
+	@chown $(RCOUCH_USER) $(PREFIX)/var/log/rcouch.log
+
+archive: dist
+	@rm -rf $(DISTDIR)
+	@rm -f rcouch-$(version)-$(os)-$(arch).tar.gz
+	@mkdir -p $(DISTDIR)$(PREFIX)
+	@cp -R rel/rcouch/* $(DISTDIR)$(PREFIX)
+	@mkdir -p $(DISTDIR)$(DATADIR)
+	@mkdir -p $(DISTDIR)$(VIEWDIR)
+	@touch $(DISTDIR)$(PREFIX)/var/log/rcouch.log
+	for F in LICENSE NOTICE README ; do \
+		cp -f $$F $(DISTDIR)$(PREFIX) ; \
+	done
+	(cd $(DISTDIR) && \
+		tar -cvzf ../rcouch-$(VERSION)-$(OS)-$(ARCH).tar.gz .)
 
 dev: all
 	@rm -rf rel/tmpdata
