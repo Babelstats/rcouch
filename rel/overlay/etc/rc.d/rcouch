@@ -28,10 +28,10 @@ SCRIPT_ERROR=1
 DESCRIPTION="database server"
 NAME=rcouch
 SCRIPT_NAME=`basename $0`
-RCOUCH=/opt/rcouch/bin/rcouch
+RCOUCH={{prefix}}/bin/rcouch
 RCOUCH_USER=rcouch
-CONFIGURATION_FILE=/opt/rcouch/etc/default/rcouch
-RUN_DIR=/opt/rcouch/var/run
+CONFIGURATION_FILE={{prefix}}/etc/default/rcouch
+RUN_DIR={{prefix}}/var/run
 LSB_LIBRARY=/lib/lsb/init-functions
 
 if test ! -x $RCOUCH; then
