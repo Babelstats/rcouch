@@ -42,7 +42,7 @@ Requirements:
 
 - Erlang R14x
 - Git
-- Tested under Linux or Macosx
+- Tested under Linux, FreeBSD,  Macosx
 
 Do install:
 
