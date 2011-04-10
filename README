@@ -11,12 +11,12 @@ Features:
 
 - Apache CouchDB 1.2x based (current trunk right now)
 - Geocouch integrated
-- Fast json encoding/decoding using eep0018 module.
+- Fast json encoding/decoding using ejson module.
 - Javascript engine is Spidermonkey 0.8.5
 - No dependancies. Modules are statically linked against spidermonkey
   and icu provided during installation.
-- Fully opensource. All the sources are on refuge GIT repository under
-  Apache License 2.
+- Fully opensource. All the sources are on refuge GIT repository
+  (http://refuge.io/code) under Apache License 2.
 
 
 Supported platforms
