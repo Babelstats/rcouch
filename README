@@ -53,3 +53,5 @@ Do install:
 To just run dev version:
 
  $ make dev
+
+More info on http://rcouch.refuge.io .
