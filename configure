@@ -46,7 +46,7 @@ do
       shift 2
     ;;
     -r)
-      RCOUCH_USER=couchdb
+      RCOUCH_USER=rcouch
       shift 1 
     ;;
     *)
