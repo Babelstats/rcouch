@@ -5,6 +5,8 @@
 erl_crash.dump
 rel/rcouch-*.tar.gz
 
+rel/archive
+
 # building
 apps/*/ebin/
 rel/dbcore
