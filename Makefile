@@ -19,6 +19,11 @@ all: deps compile
 compile:
 	@./rebar compile
 
+gitorious-all: gitorious-deps compile
+
+gitorious-deps:
+	./rebar -C gitorious.rebar.config get-deps
+
 deps:
 	./rebar get-deps
 
