@@ -529,6 +529,12 @@ function $$(node) {
           $("#version").text(info.version);
         }
       });
+
+      $.couch.info({
+        success: function(info, status) {
+          $("#rcversion").text(info.rcouch);
+        }
+      });
     });
   });
 
