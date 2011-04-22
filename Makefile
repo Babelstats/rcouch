@@ -60,6 +60,11 @@ install: dist
 	@touch $(PREFIX)/var/log/rcouch.log
 	@chown $(RCOUCH_USER) $(PREFIX)/var/log/rcouch.log
 
+deps-snapshot: clean
+	@rm -rf rcouch-deps-$(OS)-$(ARCH).tar.gz
+	(cd deps && \
+		tar cvzf ../rcouch-deps-$(VERSION)-$(OS)-$(ARCH).tar.gz .)
+
 archive: dist
 	@rm -rf $(DISTDIR)
 	@rm -f rcouch-$(VERSION)-$(OS)-$(ARCH).tar.gz
