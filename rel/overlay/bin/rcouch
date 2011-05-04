@@ -14,6 +14,11 @@
 
 ERTS_BIN_DIR=$(cd ${0%/*} && pwd)
 
+# Positioning itself at RCouch ROOT
+cd $ERTS_BIN_DIR/..
+RCOUCH_HOME=`pwd`
+#echo "RCOUCH HOME is ${RCOUCH_HOME}"
+
 export ROOTDIR=${ERTS_BIN_DIR%/*}
 
 START_ERL=`cat $ROOTDIR/releases/start_erl.data`

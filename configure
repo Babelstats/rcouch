@@ -16,7 +16,8 @@ OS=`uname -s`
 ARCH=`uname -m`
 VERSION=`git describe --tags`
 
-PREFIX="/opt/rcouch"
+# PREFIX is by default the current directory
+PREFIX="."
 RCOUCH_USER=`whoami`
 ABSPATH="$(cd "${0%/*}" 2>/dev/null; echo "$PWD"/"${0##*/}")"
 if test ! -n "$DIRPATH"; then DIRPATH=`dirname "$ABSPATH"`; fi
@@ -27,10 +28,6 @@ do
   in
     -p)
       PREFIX=$2
-      shift 2
-    ;;
-    -t)
-      TEMPLATE=$2
       shift 2
     ;;
     -d)
@@ -50,7 +47,7 @@ do
       shift 1 
     ;;
     *)
-      echo "usage: $0 [-p {prefix} -t {template} -d {data_dir} -v {view_dir} -u {user}]"
+      echo "usage: $0 [-p {prefix} -d {data_dir} -v {view_dir} -u {user}]"
       exit
     ;;
   esac

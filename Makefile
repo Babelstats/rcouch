@@ -12,6 +12,7 @@
 ## License for the specific language governing permissions and limitations under
 ## the License.
 
+DESTDIR?=	/opt/rcouch
 DISTDIR=	rel/archive
 
 all: deps compile
@@ -51,14 +52,14 @@ distclean: clean
 
 include install.mk
 install: dist
-	@mkdir -p $(PREFIX)
-	@cp -R rel/rcouch/* $(PREFIX)
-	@mkdir -p $(DATADIR)
-	@chown $(RCOUCH_USER) $(DATADIR)
-	@mkdir -p $(VIEWDIR)
-	@chown $(RCOUCH_USER) $(VIEWDIR)
-	@touch $(PREFIX)/var/log/rcouch.log
-	@chown $(RCOUCH_USER) $(PREFIX)/var/log/rcouch.log
+	@mkdir -p $(DESTDIR)
+	@cp -R rel/rcouch/* $(DESTDIR)
+	@mkdir -p $(DESTDIR)/$(DATADIR)
+	@chown $(RCOUCH_USER) $(DESTDIR)/$(DATADIR)
+	@mkdir -p $(DESTDIR)/$(VIEWDIR)
+	@chown $(RCOUCH_USER) $(DESTDIR)/$(VIEWDIR)
+	@touch $(DESTDIR)/var/log/rcouch.log
+	@chown $(RCOUCH_USER) $(DESTDIR)/var/log/rcouch.log
 
 deps-snapshot: clean
 	@rm -rf rcouch-deps-$(OS)-$(ARCH).tar.gz
@@ -68,13 +69,13 @@ deps-snapshot: clean
 archive: dist
 	@rm -rf $(DISTDIR)
 	@rm -f rcouch-$(VERSION)-$(OS)-$(ARCH).tar.gz
-	@mkdir -p $(DISTDIR)$(PREFIX)
-	@cp -R rel/rcouch/* $(DISTDIR)$(PREFIX)
-	@mkdir -p $(DISTDIR)$(DATADIR)
-	@mkdir -p $(DISTDIR)$(VIEWDIR)
-	@touch $(DISTDIR)$(PREFIX)/var/log/rcouch.log
+	@mkdir -p $(DISTDIR)/$(PREFIX)
+	@cp -R rel/rcouch/* $(DISTDIR)/$(PREFIX)
+	@mkdir -p $(DISTDIR)/$(DATADIR)
+	@mkdir -p $(DISTDIR)/$(VIEWDIR)
+	@touch $(DISTDIR)/$(PREFIX)/var/log/rcouch.log
 	for F in LICENSE NOTICE README ; do \
-		cp -f $$F $(DISTDIR)$(PREFIX) ; \
+		cp -f $$F $(DISTDIR)/$(PREFIX) ; \
 	done
 	(cd $(DISTDIR) && \
 		tar -cvzf ../rcouch-$(VERSION)-$(OS)-$(ARCH).tar.gz .)
