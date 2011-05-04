@@ -44,11 +44,16 @@ Requirements:
 - Git
 - Tested under Linux, FreeBSD,  Macosx
 
-Do install:
+Do install (by default on /opt/rcouch):
 
  $ ./configure
  $ make
  $ make install
+
+
+To install in a different directory (e.g. to install in ~/foo):
+
+ $ DESTDIR=~/foo make install
 
 To just run dev version:
 
