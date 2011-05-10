@@ -36,7 +36,7 @@ clean:
  
 check: deps/couch/test/etap/etap.beam deps/couch/test/etap/test_util.beam deps/couch/test/etap/test_web.beam
 	@ERL_FLAGS="-pa `pwd`/deps/couch/ebin `pwd`/deps/couch/test/etap" \
-		prove deps/couch/test/etap/*.t
+		prove -v deps/couch/test/etap/*.t
 
 dist: compile
 	@rm -rf rel/rcouch
