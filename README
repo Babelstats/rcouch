@@ -1,5 +1,5 @@
-rcouch 0.2 - Alternate couchdb version
---------------------------------------
+Refuge CouchDB - Alternate couchdb version
+------------------------------------------
 
 Refuge CouchDB is a custom distribution of Apache CouchDB using rebar.
 The purpose of this project is to provide a CouchDB base for the refuge
@@ -33,7 +33,7 @@ Get binaries from http://rcouch.refuge.io/dl
 
 then do:
 
-$ tar xvzf rcouch-0.2-$PLATFORM.tar.gz -C /
+$ tar xvzf rcouch-0.3-$PLATFORM.tar.gz -C /
 
 Install from source
 -------------------
@@ -43,6 +43,7 @@ Requirements:
 - Erlang R14x
 - Git
 - Tested under Linux, FreeBSD,  Macosx
+- curl 
 
 Do install (by default on /opt/rcouch):
 
