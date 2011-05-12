@@ -24,7 +24,6 @@ if test ! -n "$DIRPATH"; then DIRPATH=`dirname "$ABSPATH"`; fi
 
 basename=`basename $0`
 
-
 display_error () {
     if test -n "$1"; then
         echo $1 >&2
@@ -41,8 +40,10 @@ Usage: $basename [OPTION]
 
   -p PREFIX   prefix path
   -d DATA     set the database directory ($PREFIX/var/lib)
-  -V VIEW     set the view directory ($PREFIX/var/lib)
+  -l LOG      set the log directory ($PREFIX/var/log)
+  -v VIEW     set the view directory ($PREFIX/var/lib)
   -u USER     set the user directory
+  -r RUN      set the run directory ($PREFIX/var/run)
   -s SYSCONF  sett the sysconf directory ($PREFIX/etc)
 EOF
 }
@@ -66,6 +67,10 @@ do
       DATA=$2
       shift 2
     ;;
+    -l)
+      LOG=$2
+      shift 2
+      ;;
     -v)
       VIEW=$2
       shift 2
@@ -75,6 +80,10 @@ do
       shift 2
     ;;
     -r)
+      RUN=$2
+      shift 2
+      ;;
+    -R)
       RCOUCH_USER=rcouch
       shift 1 
     ;;
@@ -92,6 +101,9 @@ done
 if test ! -n "$DATA"; then DATA="$PREFIX/var/lib"; fi
 if test ! -n "$VIEW"; then VIEW="$PREFIX/var/lib"; fi
 if test ! -n "$SYSCONF"; then SYSCONF="$PREFIX/etc"; fi
+if test ! -n "$RUN"; then RUN="$PREFIX/var/run"; fi
+if test ! -n "$LOG"; then LOG="$PREFIX/var/log"; fi
+
 
 echo "==> configuring rcouch in rel/rcouch.config"
 cat > rel/rcouch.config << EOF
@@ -99,6 +111,8 @@ cat > rel/rcouch.config << EOF
 {data_dir, "$DATA"}.
 {view_dir, "$VIEW"}.
 {sysconf_dir, "$SYSCONF"}.
+{run_dir, "$RUN"}.
+{log_dir, "$LOG"}.
 {user, "$RCOUCH_USER"}.
 {node_name, "-sname rcouch"}.
 {couchdb_port, 5984}.
@@ -111,6 +125,8 @@ PREFIX = $PREFIX
 DATADIR = $DATA
 VIEWDIR = $VIEW
 SYSCONF_DIR = $SYSCONF
+RUNDIR = $RUN
+LOGDIR = $LOG
 RCOUCH_USER = $RCOUCH_USER
 OS = $OS
 ARCH = $ARCH
@@ -124,6 +140,8 @@ cat > rel/dev.config << EOF
 {data_dir, "$DIRPATH/rel/tmpdata/dev"}.
 {view_dir, "$DIRPATH/rel/tmpdata/dev"}.
 {sysconf_dir, "$DIRPATH/rel/dev/etc"}.
+{run_dir, "$DIRPATH/rel/dev/var/run"}.
+{log_dir, "$DIRPATH/rel/dev/var/log"}.
 {user, "$RCOUCH_USER"}.
 {node_name, "-name dev@127.0.0.1"}.
 {couchdb_port, 15984}.

@@ -50,17 +50,20 @@ distclean: clean
 install: dist
 	@echo "==> install to $(DESTDIR)$(PREFIX)"
 	@mkdir -p $(DESTDIR)$(PREFIX)
-	@for D in bin erts-* lib releases share var; do\
+	@for D in bin erts-* lib releases share; do\
 		cp -R rel/rcouch/$$F $(DESTDIR)$(PREFIX) ; \
 	done
 	@mkdir -p $(DESTDIR)$(SYSCONF_DIR)/rcouch
 	@cp -R rel/rcouch/etc/*  $(DESTDIR)$(SYSCONF_DIR)/rcouch/
 	@mkdir -p $(DESTDIR)$(DATADIR)
-	@chown $(RCOUCH_USER) $(DESTDIR)$(DATADIR)
+	@chown -R $(RCOUCH_USER) $(DESTDIR)$(DATADIR)
 	@mkdir -p $(DESTDIR)$(VIEWDIR)
 	@chown $(RCOUCH_USER) $(DESTDIR)$(VIEWDIR)
-	@touch $(DESTDIR)$(PREFIX)/var/log/rcouch.log
-	@chown $(RCOUCH_USER) $(DESTDIR)$(PREFIX)/var/log/rcouch.log
+	@mkdir -p $(DESTDIR)$(LOGDIR)
+	@touch $(DESTDIR)$(LOGDIR)/rcouch.log
+	@chown $(RCOUCH_USER) $(DESTDIR)$(LOGDIR)/rcouch.log
+	@mkdir -p $(DESTDIR)$(RUNDIR)
+	@chown -R $(RCOUCH_USER) $(DESTDIR)$(RUNDIR)
 
 deps-snapshot: clean
 	@rm -rf rcouch-deps-$(OS)-$(ARCH).tar.gz
@@ -70,11 +73,18 @@ deps-snapshot: clean
 archive: dist
 	@rm -rf $(DISTDIR)
 	@rm -f rcouch-$(VERSION)-$(OS)-$(ARCH).tar.gz
-	@mkdir -p $(DISTDIR)/$(PREFIX)
+	@mkdir -p $(DISTDIR)$(PREFIX)
 	@cp -R rel/rcouch/* $(DISTDIR)/$(PREFIX)
-	@mkdir -p $(DISTDIR)/$(DATADIR)
-	@mkdir -p $(DISTDIR)/$(VIEWDIR)
-	@touch $(DISTDIR)/$(PREFIX)/var/log/rcouch.log
+	@for D in bin erts-* lib releases share; do\
+		cp -R rel/rcouch/$$F $(DISTDIR)$(PREFIX) ; \
+	done
+	@mkdir -p $(DISTDIR)$(SYSCONF_DIR)/rcouch
+	@cp -R rel/rcouch/etc/*  $(DISTDIR)$(SYSCONF_DIR)/rcouch/
+	@mkdir -p $(DISTDIR)$(LOGDIR)
+	@mkdir -p $(DISTDIR)$(RUNDIR)
+	@mkdir -p $(DISTDIR)$(DATADIR)
+	@mkdir -p $(DISTDIR)$(VIEWDIR)
+	@touch $(DISTDIR)$(PREFIX)/var/log/rcouch.log
 	@for F in LICENSE NOTICE README ; do \
 		cp -f $$F $(DISTDIR)/$(PREFIX) ; \
 	done
