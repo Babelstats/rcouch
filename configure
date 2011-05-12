@@ -22,6 +22,38 @@ RCOUCH_USER=`whoami`
 ABSPATH="$(cd "${0%/*}" 2>/dev/null; echo "$PWD"/"${0##*/}")"
 if test ! -n "$DIRPATH"; then DIRPATH=`dirname "$ABSPATH"`; fi
 
+basename=`basename $0`
+
+
+display_error () {
+    if test -n "$1"; then
+        echo $1 >&2
+    fi
+    echo >&2
+    echo "Try \`"$basename" -h' for more information." >&2
+    false
+}
+
+display_help ()
+{
+    cat << EOF
+Usage: $basename [OPTION]
+
+  -p PREFIX   prefix path
+  -d DATA     set the database directory ($PREFIX/var/lib)
+  -V VIEW     set the view directory ($PREFIX/var/lib)
+  -u USER     set the user directory
+  -s SYSCONF  sett the sysconf directory ($PREFIX/etc)
+EOF
+}
+
+
+CURL_BIN=`which curl`
+if ! test -n "CURL_BIN"; then
+    display_error "Error: curl is required. Add it to 'PATH'" 
+    exit 1
+fi
+
 while [ $# -gt 0 ]
 do
   case $1
@@ -51,7 +83,7 @@ do
       shift 2
       ;;
     *)
-      echo "usage: $0 [-p {prefix} -d {data_dir} -v {view_dir} -u {user}]"
+      display_help
       exit
     ;;
   esac
