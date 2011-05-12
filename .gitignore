@@ -5,21 +5,14 @@
 erl_crash.dump
 rel/rcouch-*.tar.gz
 
+
 rel/archive
 
 # building
 apps/*/ebin/
 rel/dbcore
-rel/bigcouch.config
 rel/overlay.config
-install.mk
-
-# scons building
-couchjs/.sconf_temp/
-couchjs/.sconsign.dblite
-couchjs/build/
-couchjs/config.log
-*.pyc
+config.mk
 
 # testing
 .eunit
@@ -39,4 +32,5 @@ deps
 
 # rel
 rel/rcouch
+rel/dev.config
 rel/rcouch.config
