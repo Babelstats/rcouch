@@ -32,8 +32,8 @@ HEART_COMMAND="$ROOTDIR/bin/rcouch -k"
 KILL=false
 RESPAWN_TIMEOUT=0
 SHUTDOWN=false
-STDERR_FILE=couchdb.stderr
-STDOUT_FILE=couchdb.stdout
+STDERR_FILE=rcouch.stderr
+STDOUT_FILE=rcouch.stdout
 RCOUCH_USER={{user}}
 
 basename=`basename $0`
@@ -164,7 +164,7 @@ stop_couchdb ()
             fi
         fi
     else
-        echo "Apache CouchDB is not running."
+        @echo "Apache CouchDB is not running."
     fi
 }
 
