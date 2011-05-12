@@ -15,6 +15,8 @@
 DESTDIR?=
 DISTDIR=       rel/archive
 
+include config.mk
+
 all: deps compile
 
 compile:
@@ -48,10 +50,8 @@ distclean: clean
 	@rm -f rel/couchdb.config
 	@rm -rf deps
 	@rm -rf rel/tmpdata
-	@rm -rf install.mk
+	@rm -rf config.mk
 
-
-include install.mk
 install: dist
 	@echo "==> install to $(DESTDIR)$(PREFIX)"
 	@mkdir -p $(DESTDIR)$(PREFIX)
