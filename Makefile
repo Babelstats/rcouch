@@ -22,11 +22,6 @@ all: deps compile
 compile:
 	@./rebar compile
 
-gitorious-all: gitorious-deps compile
-
-gitorious-deps:
-	./rebar -C gitorious.rebar.config get-deps
-
 deps:
 	./rebar get-deps
 
@@ -55,7 +50,7 @@ distclean: clean
 install: dist
 	@echo "==> install to $(DESTDIR)$(PREFIX)"
 	@mkdir -p $(DESTDIR)$(PREFIX)
-	@for D in bin erts-* lib	releases share var; do\
+	@for D in bin erts-* lib releases share var; do\
 		cp -R rel/rcouch/$$F $(DESTDIR)$(PREFIX) ; \
 	done
 	@mkdir -p $(DESTDIR)$(SYSCONF_DIR)/rcouch
