@@ -12,8 +12,8 @@
 ## License for the specific language governing permissions and limitations under
 ## the License.
 
-DESTDIR?=	/opt/rcouch
-DISTDIR=	rel/archive
+DESTDIR?=
+DISTDIR=       rel/archive
 
 all: deps compile
 
@@ -52,14 +52,14 @@ distclean: clean
 
 include install.mk
 install: dist
-	@mkdir -p $(DESTDIR)
-	@cp -R rel/rcouch/* $(DESTDIR)
-	@mkdir -p $(DESTDIR)/$(DATADIR)
-	@chown $(RCOUCH_USER) $(DESTDIR)/$(DATADIR)
-	@mkdir -p $(DESTDIR)/$(VIEWDIR)
-	@chown $(RCOUCH_USER) $(DESTDIR)/$(VIEWDIR)
-	@touch $(DESTDIR)/var/log/rcouch.log
-	@chown $(RCOUCH_USER) $(DESTDIR)/var/log/rcouch.log
+	mkdir -p $(DESTDIR)$(PREFIX)
+	@cp -R rel/rcouch/* $(DESTDIR)$(PREFIX)
+	@mkdir -p $(DESTDIR)$(DATADIR)
+	@chown $(RCOUCH_USER) $(DESTDIR)$(DATADIR)
+	@mkdir -p $(DESTDIR)$(VIEWDIR)
+	@chown $(RCOUCH_USER) $(DESTDIR)$(VIEWDIR)
+	@touch $(DESTDIR)$(PREFIX)/var/log/rcouch.log
+	@chown $(RCOUCH_USER) $(DESTDIR)$(PREFIX)/var/log/rcouch.log
 
 deps-snapshot: clean
 	@rm -rf rcouch-deps-$(OS)-$(ARCH).tar.gz
