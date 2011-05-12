@@ -48,12 +48,18 @@ distclean: clean
 	@rm -f rel/couchdb.config
 	@rm -rf deps
 	@rm -rf rel/tmpdata
+	@rm -rf install.mk
 
 
 include install.mk
 install: dist
-	mkdir -p $(DESTDIR)$(PREFIX)
-	@cp -R rel/rcouch/* $(DESTDIR)$(PREFIX)
+	@echo "==> install to $(DESTDIR)$(PREFIX)"
+	@mkdir -p $(DESTDIR)$(PREFIX)
+	@for D in bin erts-* lib	releases share var; do\
+		cp -R rel/rcouch/$$F $(DESTDIR)$(PREFIX) ; \
+	done
+	@mkdir -p $(DESTDIR)$(SYSCONF_DIR)/rcouch
+	@cp -R rel/rcouch/etc/*  $(DESTDIR)$(SYSCONF_DIR)/rcouch/
 	@mkdir -p $(DESTDIR)$(DATADIR)
 	@chown $(RCOUCH_USER) $(DESTDIR)$(DATADIR)
 	@mkdir -p $(DESTDIR)$(VIEWDIR)
@@ -74,7 +80,7 @@ archive: dist
 	@mkdir -p $(DISTDIR)/$(DATADIR)
 	@mkdir -p $(DISTDIR)/$(VIEWDIR)
 	@touch $(DISTDIR)/$(PREFIX)/var/log/rcouch.log
-	for F in LICENSE NOTICE README ; do \
+	@for F in LICENSE NOTICE README ; do \
 		cp -f $$F $(DISTDIR)/$(PREFIX) ; \
 	done
 	(cd $(DISTDIR) && \

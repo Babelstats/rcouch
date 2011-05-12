@@ -46,6 +46,10 @@ do
       RCOUCH_USER=rcouch
       shift 1 
     ;;
+    -s)
+      SYSCONF=$2
+      shift 2
+      ;;
     *)
       echo "usage: $0 [-p {prefix} -d {data_dir} -v {view_dir} -u {user}]"
       exit
@@ -55,12 +59,14 @@ done
 
 if test ! -n "$DATA"; then DATA="$PREFIX/var/lib"; fi
 if test ! -n "$VIEW"; then VIEW="$PREFIX/var/lib"; fi
+if test ! -n "$SYSCONF"; then SYSCONF="$PREFIX/etc"; fi
 
 echo "==> configuring rcouch in rel/rcouch.config"
 cat > rel/rcouch.config << EOF
 {prefix, "$PREFIX"}.
 {data_dir, "$DATA"}.
 {view_dir, "$VIEW"}.
+{sysconf_dir, "$SYSCONF"}.
 {user, "$RCOUCH_USER"}.
 {node_name, "-sname rcouch"}.
 {couchdb_port, 5984}.
@@ -72,6 +78,7 @@ cat > install.mk << EOF
 PREFIX = $PREFIX
 DATADIR = $DATA
 VIEWDIR = $VIEW
+SYSCONF_DIR = $SYSCONF
 RCOUCH_USER = $RCOUCH_USER
 OS = $OS
 ARCH = $ARCH
@@ -84,6 +91,7 @@ cat > rel/dev.config << EOF
 {prefix, "$DIRPATH/rel/dev"}.
 {data_dir, "$DIRPATH/rel/tmpdata/dev"}.
 {view_dir, "$DIRPATH/rel/tmpdata/dev"}.
+{sysconf_dir, "$DIRPATH/rel/dev/etc"}.
 {user, "$RCOUCH_USER"}.
 {node_name, "-name dev@127.0.0.1"}.
 {couchdb_port, 15984}.
