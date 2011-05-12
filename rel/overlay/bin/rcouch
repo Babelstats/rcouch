@@ -35,6 +35,15 @@ SHUTDOWN=false
 STDERR_FILE=rcouch.stderr
 STDOUT_FILE=rcouch.stdout
 RCOUCH_USER={{user}}
+DEFAULT_CONFIG_DIR={{sysconf_dir}}/rcouch/default.d
+DEFAULT_CONFIG_FILE={{sysconf_dir}}/rcouch/default.ini
+LOCAL_CONFIG_DIR={{sysconf_dir}}/rcouch/local.d
+LOCAL_CONFIG_FILE={{sysconf_dir}}/rcouch/local.ini
+VM_ARGS={{sysconf_dir}}/rcouch/vm.args
+
+print_arguments=""
+start_arguments=""
+background_start_arguments=""
 
 basename=`basename $0`
 
@@ -43,7 +52,11 @@ display_help ()
     cat << EOF
 Usage: $basename [OPTION]
 
+  -a FILE     add configuration FILE to chain
+  -A DIR      add configuration DIR to chain
   -b          spawn as a background process
+  -n          reset configuration file chain (including system default)
+  -c          print configuration file chain and exit
   -p FILE     set the background PID FILE (overrides system default)
   -u USER     couchdb user
   -r SECONDS  respawn background process after SECONDS (defaults to no respawn)
@@ -77,6 +90,51 @@ _get_pid () {
     echo $PID
 }
 
+_add_config_file () {
+    start_arguments="$start_arguments $1"
+    background_start_arguments="$background_start_arguments -a $1"
+}
+
+_add_config_file () {
+    if test -z "$print_arguments"; then
+        print_arguments="$1"
+    else
+        print_arguments="`cat <<EOF
+$print_arguments
+$1
+EOF
+`"
+    fi
+    start_arguments="$start_arguments $1"
+    background_start_arguments="$background_start_arguments -a $1"
+}
+
+_add_config_dir () {
+    for file in "$1"/*.ini; do
+        if [ -r "$file" ]; then
+          _add_config_file "$file"
+        fi
+    done
+}
+
+_load_config () {
+    _add_config_file "$DEFAULT_CONFIG_FILE"
+    _add_config_dir "$DEFAULT_CONFIG_DIR"
+    _add_config_file "$LOCAL_CONFIG_FILE"
+    _add_config_dir "$LOCAL_CONFIG_DIR"
+}
+
+_reset_config () {
+    start_arguments=""
+    background_start_arguments="-n"
+}
+
+_print_config () {
+    cat <<EOF
+$print_arguments
+EOF
+}
+
 check_status () {
     PID=`_get_pid`
     if test -n "$PID"; then
@@ -98,11 +156,12 @@ start_couchdb ()
 {
     command=" $BINDIR/erlexec \
         -boot $ROOTDIR/releases/$APP_VSN/rcouch \
-        -args_file $ROOTDIR/etc/vm.args"
+        -args_file $VM_ARGS \
+        -couch_ini $start_arguments"
 
     if test "$BACKGROUND" = "true" -a "$RECURSED" = "false"; then
-        $0 -b -r $RESPAWN_TIMEOUT -p $PIDFILE -u $RCOUCH_USER \
-            -o $STDOUT_FILE -e $STDERR_FILE -R &
+        $0 $background_start_arguments -b -r $RESPAWN_TIMEOUT \
+            -p $PIDFILE -u $RCOUCH_USER -o $STDOUT_FILE -e $STDERR_FILE -R &
         echo "Apache CouchDB has started, time to relax."
     else
         if test "$RECURSED" = "true"; then
@@ -170,8 +229,9 @@ stop_couchdb ()
 
 parse_script_option_list () 
 {
+    _load_config    
     set +e
-    options=`getopt hbp:u:r:Ro:e:skd $@`
+    options=`getopt ha:A:npbp:u:r:Ro:e:skd $@`
     if test ! $? -eq 0; then
         display_error
     fi
@@ -180,6 +240,10 @@ parse_script_option_list ()
     while [ $# -gt 0 ]; do
         case "$1" in
             -h) shift; display_help; exit;;
+            -a) shift; _add_config_file "$1"; shift;;
+            -A) shift; _add_config_dir "$1"; shift;;
+            -n) shift; _reset_config;;
+            -c) shift; _print_config; exit;;
             -b) shift; BACKGROUND=true;;
             -p) shift; PIDFILE=$1; shift;;
             -u) shift; RCOUCH_USER=$1; shift;;

@@ -51,10 +51,10 @@ install: dist
 	@echo "==> install to $(DESTDIR)$(PREFIX)"
 	@mkdir -p $(DESTDIR)$(PREFIX)
 	@for D in bin erts-* lib releases share; do\
-		cp -R rel/rcouch/$$F $(DESTDIR)$(PREFIX) ; \
+		cp -R rel/rcouch/$$D $(DESTDIR)$(PREFIX) ; \
 	done
-	@mkdir -p $(DESTDIR)$(SYSCONF_DIR)/rcouch
-	@cp -R rel/rcouch/etc/*  $(DESTDIR)$(SYSCONF_DIR)/rcouch/
+	@mkdir -p $(DESTDIR)$(SYSCONF_DIR)
+	@cp -R rel/rcouch/etc/*  $(DESTDIR)$(SYSCONF_DIR)
 	@mkdir -p $(DESTDIR)$(DATADIR)
 	@chown -R $(RCOUCH_USER) $(DESTDIR)$(DATADIR)
 	@mkdir -p $(DESTDIR)$(VIEWDIR)
@@ -76,7 +76,7 @@ archive: dist
 	@mkdir -p $(DISTDIR)$(PREFIX)
 	@cp -R rel/rcouch/* $(DISTDIR)/$(PREFIX)
 	@for D in bin erts-* lib releases share; do\
-		cp -R rel/rcouch/$$F $(DISTDIR)$(PREFIX) ; \
+		cp -R rel/rcouch/$$D $(DISTDIR)$(PREFIX) ; \
 	done
 	@mkdir -p $(DISTDIR)$(SYSCONF_DIR)/rcouch
 	@cp -R rel/rcouch/etc/*  $(DISTDIR)$(SYSCONF_DIR)/rcouch/
@@ -86,7 +86,7 @@ archive: dist
 	@mkdir -p $(DISTDIR)$(VIEWDIR)
 	@touch $(DISTDIR)$(PREFIX)/var/log/rcouch.log
 	@for F in LICENSE NOTICE README ; do \
-		cp -f $$F $(DISTDIR)/$(PREFIX) ; \
+		cp -f $$F $(DISTDIR)$(PREFIX) ; \
 	done
 	(cd $(DISTDIR) && \
 		tar -cvzf ../rcouch-$(VERSION)-$(OS)-$(ARCH).tar.gz .)

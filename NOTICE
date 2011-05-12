@@ -5,3 +5,11 @@ rcouch
 
 rcouch is released under the Apache 2 license. See the LICENSE file for
 the complete license.
+
+rel/overlay/bin/rcouch
+----------------------
+
+Based on bin/couchdb from Apache couchDB project under Apache 2 license.
+
+Copyright 2009 The Apache Software Foundation
+
