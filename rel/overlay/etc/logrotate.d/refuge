@@ -1,0 +1,9 @@
+{{log_dir}}refuge.log {
+       weekly
+       rotate 10
+       copytruncate
+       delaycompress
+       compress
+       notifempty
+       missingok
+}

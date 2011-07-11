@@ -1,0 +1,140 @@
+#!/bin/sh
+
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+ERTS_BIN_DIR=$(cd ${0%/*} && pwd)
+export ROOTDIR=${ERTS_BIN_DIR%/*}
+TEMPLATES_DIR=$ROOTDIR/share/templates
+REFUGE_PORT=0
+REFUGE_NODE_NAME=refuge
+
+basename=`basename $0`
+
+display_help ()
+{
+    cat << EOF
+Usage: $basename [OPTION] HOME
+
+  -h          display this help
+  -p PORT     set the port to PORT (default: automatic)
+  -n NODE     set the node name (default: 'refuge')
+  -o          override any file already present at this location
+EOF
+}
+
+display_error () {
+    if test -n "$1"; then
+        echo $1 >&2
+    fi
+    echo >&2
+    echo "Try \`"$basename" -h' for more information." >&2
+    exit 1
+}
+
+_make_refuge_home ()
+{
+    home=$1
+
+    # create the instance directory if needed
+    mkdir -p $home
+
+    if test "$OVERRIDE" == ""; then
+        echo "--Deploying a new Refuge instance in $home"
+    else
+        echo "--Overriding Refuge instance at $home"
+    fi
+    _deploy_directories $home
+    _deploy_vmargs $home
+    _deploy_localini $home
+}
+
+_deploy_vmargs ()
+{
+    home=$1
+    echo "  --Deploying vm.args in $home"
+    escaped_home=${home////\\/}
+    cat $TEMPLATES_DIR/vm.args \
+        | sed "s/{{refuge_home}}/$escaped_home/" \
+        | sed "s/{{node_name}}/$REFUGE_NODE_NAME/" \
+        > $home/vm.args
+    echo "      Done!"
+}
+
+_deploy_localini ()
+{
+    home=$1
+    echo "  --Deploying local.ini in $home"
+    escaped_home=${home////\\/}
+    cat $TEMPLATES_DIR/local.ini \
+        | sed "s/{{refuge_home}}/$escaped_home/" \
+        | sed "s/{{refuge_port}}/$REFUGE_PORT/" \
+        > $home/local.ini
+    echo "      Done!"
+}
+
+_deploy_directories ()
+{
+    home=$1
+    echo "  --Creating directories lib and log"
+    mkdir -p $home/lib
+    mkdir -p $home/log
+    echo "      Done!"
+}
+
+_check_instance ()
+{
+    home=$1
+
+    result="ok"
+    if test -f $home/local.ini -o -f $home/vm.args; then
+        result="already_there"
+    fi
+
+    if test "$result" == "already_there" -a "$OVERRIDE" == ""; then
+        echo "/!\ The refuge instance located at $home already has configuration files!"
+        echo "Try again with -o to override"
+        exit 1
+    fi
+}
+
+parse_script_option_list () 
+{
+    set +e
+    options=`getopt hp:n:o $@`
+    if test ! $? -eq 0; then
+        display_error
+    fi
+    set -e
+    eval set -- $options
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h) shift; display_help; exit;;
+            -p) shift; REFUGE_PORT=$1; shift;;
+            -n) shift; REFUGE_NODE_NAME=$1; shift;;
+            -o) shift; OVERRIDE="yes";;
+            --) shift; break;;
+            *) display_error "Unknown option: $1" >&2;;
+        esac
+    done
+    
+    # grabbing the instance home as the last argument *only*
+    if test $# != 1; then
+        display_error "Wrong syntax!" >&2
+    fi
+
+    NEW_REFUGE_HOME=$1
+    _check_instance $NEW_REFUGE_HOME
+    _make_refuge_home $NEW_REFUGE_HOME
+}
+
+parse_script_option_list $@

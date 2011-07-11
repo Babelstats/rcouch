@@ -1,0 +1,285 @@
+#!/bin/sh
+
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+ERTS_BIN_DIR=$(cd ${0%/*} && pwd)
+
+export ROOTDIR=${ERTS_BIN_DIR%/*}
+
+START_ERL=`cat $ROOTDIR/releases/start_erl.data`
+ERTS_VSN=${START_ERL% *}
+APP_VSN=${START_ERL#* }
+
+export BINDIR=$ROOTDIR/erts-$ERTS_VSN/bin
+export EMU=beam
+export PROGNAME=`echo $0 | sed 's/.*\///'`
+
+RECURSED=false
+BACKGROUND=false
+PIDFILE={{run_dir}}/refuge.pid
+HEART_BEAT_TIMEOUT=11
+HEART_COMMAND="$ROOTDIR/bin/refuge -k"
+KILL=false
+RESPAWN_TIMEOUT=0
+SHUTDOWN=false
+STDERR_FILE=refuge.stderr
+STDOUT_FILE=refuge.stdout
+REFUGE_USER={{user}}
+DEFAULT_CONFIG_DIR={{sysconf_dir}}/refuge/default.d
+DEFAULT_CONFIG_FILE={{sysconf_dir}}/refuge/default.ini
+LOCAL_CONFIG_DIR={{sysconf_dir}}/refuge/local.d
+LOCAL_CONFIG_FILE={{sysconf_dir}}/refuge/local.ini
+VM_ARGS={{sysconf_dir}}/refuge/vm.args
+
+print_arguments=""
+start_arguments=""
+background_start_arguments=""
+
+basename=`basename $0`
+
+display_help ()
+{
+    cat << EOF
+Usage: $basename [OPTION]
+
+  -a FILE     add configuration FILE to chain
+  -A DIR      add configuration DIR to chain
+  -b          spawn as a background process
+  -n          reset configuration file chain (including system default)
+  -c          print configuration file chain and exit
+  -p FILE     set the background PID FILE (overrides system default)
+  -u USER     couchdb user
+  -r SECONDS  respawn background process after SECONDS (defaults to no respawn)
+  -k          kill the background process, will respawn if needed
+  -d          shutdown the background process
+  -s          display the status of the background process  
+  -o FILE     redirect background stdout to FILE (defaults to $STDOUT_FILE)
+  -e FILE     redirect background stderr to FILE (defaults to $STDERR_FILE)
+  -H HOME     use local settings located in HOME
+EOF
+}
+
+display_error () {
+    if test -n "$1"; then
+        echo $1 >&2
+    fi
+    echo >&2
+    echo "Try \`"$basename" -h' for more information." >&2
+    false
+}
+
+pid_touch ()
+{
+    touch $PIDFILE
+    chown $REFUGE_USER $PIDFILE
+}
+
+_get_pid () {
+    if test -f $PIDFILE; then
+        PID=`cat $PIDFILE`
+    fi
+    echo $PID
+}
+
+_add_config_file () {
+    start_arguments="$start_arguments $1"
+    background_start_arguments="$background_start_arguments -a $1"
+}
+
+_add_config_file () {
+    if test -z "$print_arguments"; then
+        print_arguments="$1"
+    else
+        print_arguments="`cat <<EOF
+$print_arguments
+$1
+EOF
+`"
+    fi
+    start_arguments="$start_arguments $1"
+    background_start_arguments="$background_start_arguments -a $1"
+}
+
+_add_config_dir () {
+    for file in "$1"/*.ini; do
+        if [ -r "$file" ]; then
+          _add_config_file "$file"
+        fi
+    done
+}
+
+_load_config () {
+    _add_config_file "$DEFAULT_CONFIG_FILE"
+    _add_config_dir "$DEFAULT_CONFIG_DIR"
+    _add_config_file "$LOCAL_CONFIG_FILE"
+    _add_config_dir "$LOCAL_CONFIG_DIR"
+}
+
+_reset_config () {
+    start_arguments=""
+    background_start_arguments="-n"
+}
+
+_print_config () {
+    cat <<EOF
+$print_arguments
+EOF
+}
+
+check_status () {
+    PID=`_get_pid`
+    if test -n "$PID"; then
+        if kill -0 $PID 2> /dev/null; then
+            echo "Refuge is running as process $PID, time to relax."
+            return 0
+        else
+            echo >&2 << EOF
+Refuge CouchDB is not running but a stale PID file exists: $PIDFILE"
+EOF
+        fi
+    else
+        echo "Refuge is not running." >&2
+    fi
+    return 1 
+}
+
+_set_refuge_home ()
+{
+    REFUGE_HOME=$1
+    VM_ARGS=${REFUGE_HOME}/vm.args
+    start_arguments="$start_arguments $REFUGE_HOME/local.ini"
+    background_start_arguments="$background_start_arguments -H $REFUGE_HOME"
+    PIDFILE=${REFUGE_HOME}/refuge.pid
+    STDERR_FILE=${REFUGE_HOME}/refuge.stderr
+    STDOUT_FILE=${REFUGE_HOME}/refuge.stdout
+}
+
+start_refuge () 
+{
+    command="$BINDIR/erlexec \
+        -boot $ROOTDIR/releases/$APP_VSN/refuge \
+        -args_file $VM_ARGS \
+        -couch_ini $start_arguments"
+
+    if test "$BACKGROUND" = "true" -a "$RECURSED" = "false"; then
+        $0 $background_start_arguments -b -r $RESPAWN_TIMEOUT \
+            -p $PIDFILE -u $REFUGE_USER -o $STDOUT_FILE \
+            -e $STDERR_FILE -R &
+        echo "Refuge has started."
+    else
+        if test "$RECURSED" = "true"; then
+            pid_touch
+            while true; do
+                export HEART_COMMAND
+                export HEART_BEAT_TIMEOUT
+
+                `eval $command -pidfile $PIDFILE -heart \
+                        >> $STDOUT_FILE 2>> $STDERR_FILE` || true
+                PID=`_get_pid`
+                if test -n "$PID"; then
+                    if kill -0 $PID 2> /dev/null; then
+                        return 1 
+                    fi
+                else
+                    return 0
+                fi
+                if test "$RESPAWN_TIMEOUT" = "0"; then
+                    return 0
+                fi
+                if test "$RESPAWN_TIMEOUT" != "1"; then
+                    plural_ending="s"
+                fi
+                cat << EOF
+Refuge CouchDB crashed, restarting in $RESPAWN_TIMEOUT second$plural_ending.
+EOF
+                sleep $RESPAWN_TIMEOUT
+            done
+        else 
+            eval exec $command
+        fi
+    fi
+}
+
+stop_refuge ()
+{
+    PID=`_get_pid`
+    if test -n "$PID"; then
+        if test "$1" = "false"; then
+            echo > $PIDFILE
+        fi
+        if kill -0 $PID 2> /dev/null; then
+            if kill -1 $PID 2> /dev/null; then
+                if test "$1" = "false"; then
+                    echo "Refuge has been shutdown."
+                else
+                    echo "Refuge has been killed."
+                fi
+                return 0 
+            else
+                echo "Refuge could not be killed." >&2
+                return 1 
+            fi
+            if test "$1" = "false"; then
+                echo "Stale PID file exists but Refuge is not running."
+            else
+                echo "Stale PID file existed but Refuge is not running."
+            fi
+        fi
+    else
+        echo "Refuge is not running."
+    fi
+}
+
+parse_script_option_list () 
+{
+    _load_config    
+    set +e
+    options=`getopt ha:A:nbp:u:r:Ro:e:skdcH: $@`
+    if test ! $? -eq 0; then
+        display_error
+    fi
+    set -e
+    eval set -- $options
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h) shift; display_help; exit;;
+            -a) shift; _add_config_file "$1"; shift;;
+            -A) shift; _add_config_dir "$1"; shift;;
+            -n) shift; _reset_config;;
+            -c) shift; _print_config; exit;;
+            -b) shift; BACKGROUND=true;;
+            -p) shift; PIDFILE=$1; shift;;
+            -u) shift; REFUGE_USER=$1; shift;;
+            -r) shift; RESPAWN_TIMEOUT=$1; shift;;
+            -R) shift; RECURSED=true;;
+            -o) shift; STDOUT_FILE=$1; shift;;
+            -e) shift; STDERR_FILE=$1; shift;;
+            -s) shift; check_status; exit;;
+            -k) shift; KILL=true;;
+            -d) shift; SHUTDOWN=true;;
+            -H) shift; REFUGE_HOME=$1; shift;;
+            --) shift; break;;
+            *) display_error "Unknown option: $1" >&2;;
+        esac
+    done
+    if test "$REFUGE_HOME" != ""; then
+      _set_refuge_home "$REFUGE_HOME"
+    fi
+    if test "$KILL" = "true" -o "$SHUTDOWN" = "true"; then
+        stop_refuge $KILL
+    else
+        start_refuge
+    fi
+}
+
+parse_script_option_list $@

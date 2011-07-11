@@ -1,0 +1,7 @@
+# Sourced by init script for configuration.
+
+REFUGE_USER={{user}}
+REFUGE_STDOUT_FILE=/dev/null
+REFUGE_STDERR_FILE=/dev/null
+REFUGE_RESPAWN_TIMEOUT=5
+REFUGE_OPTIONS=
